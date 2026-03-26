@@ -1,0 +1,17 @@
+name: anaki_mysql
+description: MySQL driver for AnakiORM. Native connector via Rust FFI.
+version: 0.1.0
+homepage: https://github.com/anaki/anaki_orm
+resolution: workspace
+
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+
+dependencies:
+  anaki_orm: ^0.1.0
+  ffi: ^2.1.0
+  hooks: any
+  code_assets: any
+
+dev_dependencies:
+  test: ^1.25.0

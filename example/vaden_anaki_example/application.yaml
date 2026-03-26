@@ -1,0 +1,34 @@
+openapi:
+  title: vaden_anaki_example API
+  version: 1.0.0
+  description: API gerada automaticamente pelo Vaden.
+  enable: true
+
+server:
+  port: 8080
+  host: localhost
+
+storage:
+  provider: local  # opções: local, s3, firebase
+  local:
+    folder: './uploads'
+  s3:
+    bucket: 'meu-bucket'
+    region: 'us-east-1'
+    accessKey: 'sua_access_key'
+    secretKey: 'seu_secret_key'
+  firebase:
+    projectId: 'my-project'
+    apiKey: 'my_api'
+
+database:
+  host: localhost
+  port: 5432
+  username: anaki
+  password: anaki
+  database: anaki_test
+  ssl_mode: disable
+
+env:
+  mode: debug
+

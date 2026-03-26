@@ -1,0 +1,12 @@
+# Build artifacts
+target/
+*.log
+
+# Integration tests
+test/integration/
+
+# Build scripts
+scripts/
+
+# CI/CD
+.github/

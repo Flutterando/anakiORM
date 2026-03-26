@@ -1,0 +1,16 @@
+name: anaki_workspace
+
+workspace:
+  - packages/anaki_orm
+  - packages/anaki_sqlite
+  - packages/anaki_postgres
+  - packages/anaki_mysql
+  - packages/anaki_mssql
+  - example/shelf_sqlite_example
+  - example/shelf_postgres_example
+  - example/shelf_mysql_example
+  - example/shelf_mssql_example
+  - example/vaden_anaki_example
+
+environment:
+  sdk: '>=3.10.0 <4.0.0'

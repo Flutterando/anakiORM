@@ -1,0 +1,15 @@
+# Build artifacts
+target/
+*.log
+.dart_tool/
+pubspec.lock
+pubspec.yaml.dev
+
+# Integration tests (heavy, not needed by consumers)
+test/integration/
+
+# Build scripts
+scripts/
+
+# CI/CD
+.github/

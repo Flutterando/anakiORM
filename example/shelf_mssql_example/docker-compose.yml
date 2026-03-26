@@ -1,0 +1,15 @@
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: anaki_mssql
+    restart: unless-stopped
+    ports:
+      - '1433:1433'
+    environment:
+      ACCEPT_EULA: 'Y'
+      MSSQL_SA_PASSWORD: 'Anaki@Strong1'
+    volumes:
+      - mssqldata:/var/opt/mssql
+
+volumes:
+  mssqldata:

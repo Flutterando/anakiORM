@@ -1,0 +1,39 @@
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: anaki_mssql
+    restart: unless-stopped
+    ports:
+      - '1433:1433'
+    environment:
+      ACCEPT_EULA: 'Y'
+      MSSQL_SA_PASSWORD: 'Anaki@Strong1'
+    volumes:
+      - mssqldata:/var/opt/mssql
+    healthcheck:
+      test: ['/opt/mssql-tools18/bin/sqlcmd', '-S', 'localhost', '-U', 'sa', '-P', 'Anaki@Strong1', '-C', '-Q', 'SELECT 1']
+      interval: 10s
+      retries: 10
+
+  app:
+    build:
+      context: ../../
+      dockerfile: example/shelf_mssql_example/Dockerfile
+    container_name: anaki_app
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    environment:
+      HOST: '0.0.0.0'
+      PORT: '8080'
+      DB_HOST: mssql
+      DB_PORT: '1433'
+      DB_USER: sa
+      DB_PASS: 'Anaki@Strong1'
+      DB_NAME: anaki_test
+    depends_on:
+      mssql:
+        condition: service_healthy
+
+volumes:
+  mssqldata:

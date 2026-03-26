@@ -1,0 +1,14 @@
+name: shelf_postgres_example
+description: Example REST API using Shelf + AnakiORM + PostgreSQL.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+
+dependencies:
+  shelf: ^1.4.0
+  shelf_router: ^1.1.0
+  anaki_orm: ^0.1.0
+  anaki_postgres: ^0.1.0

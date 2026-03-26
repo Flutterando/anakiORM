@@ -1,0 +1,12 @@
+name: anaki_orm
+description: A Dapper-style ORM for Dart. SQL-first, simple mapping, native database connectors via Rust FFI.
+version: 0.1.0
+homepage: https://github.com/anaki/anaki_orm
+resolution: workspace
+
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+
+dev_dependencies:
+  test: ^1.25.0
+  mocktail: ^1.0.0

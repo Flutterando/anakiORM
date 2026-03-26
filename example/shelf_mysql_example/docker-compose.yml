@@ -1,0 +1,17 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: anaki_mysql
+    restart: unless-stopped
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: anaki
+      MYSQL_PASSWORD: anaki
+      MYSQL_DATABASE: anaki_test
+    volumes:
+      - mysqldata:/var/lib/mysql
+
+volumes:
+  mysqldata:
