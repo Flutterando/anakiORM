@@ -49,6 +49,7 @@ impl AnakiError {
     }
 }
 
+#[cfg(any(feature = "sqlite", feature = "postgres", feature = "mysql"))]
 impl From<sqlx::Error> for AnakiError {
     fn from(err: sqlx::Error) -> Self {
         match err {

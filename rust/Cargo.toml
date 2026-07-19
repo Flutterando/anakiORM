@@ -8,14 +8,18 @@ crate-type = ["cdylib"]
 
 [features]
 default = []
-sqlite = ["sqlx/sqlite"]
-postgres = ["sqlx/postgres"]
-mysql = ["sqlx/mysql"]
+sqlite = ["dep:sqlx", "sqlx/sqlite"]
+postgres = ["dep:sqlx", "sqlx/postgres"]
+mysql = ["dep:sqlx", "sqlx/mysql"]
 mssql = ["dep:tiberius", "dep:tokio-util"]
 oracle = ["dep:sibyl"]
+redis = ["dep:redis"]
+mongodb = ["dep:mongodb", "dep:futures-util"]
 
 [dependencies]
-tokio = { version = "1", features = ["rt-multi-thread"] }
+# "net" is required directly: mssql uses tokio::net::TcpStream and the async
+# drivers need the IO reactor even when sqlx (which used to pull it in) is absent.
+tokio = { version = "1", features = ["rt-multi-thread", "net"] }
 serde = { version = "1", features = ["derive"] }
 # preserve_order: rows must keep SELECT column order (serde_json::Map is
 # otherwise a BTreeMap that sorts keys alphabetically)
@@ -23,7 +27,7 @@ serde_json = { version = "1", features = ["preserve_order"] }
 async-trait = "0.1"
 
 # sqlx — shared across sqlite, postgres, mysql
-sqlx = { version = "0.8", features = ["runtime-tokio"], optional = false }
+sqlx = { version = "0.8", features = ["runtime-tokio"], optional = true }
 
 # mssql (SQL Server)
 tiberius = { version = "0.12", default-features = false, features = ["rustls"], optional = true }
@@ -31,6 +35,14 @@ tokio-util = { version = "0.7", features = ["compat"], optional = true }
 
 # oracle
 sibyl = { version = "0.6", optional = true }
+
+# redis (no TLS in v1; pure Rust, zigbuild-safe)
+redis = { version = "0.32", features = ["tokio-comp", "connection-manager"], optional = true }
+
+# mongodb (default features: rustls-tls + dns-resolver; never enable
+# compression/openssl/in-use-encryption — they break cargo-zigbuild)
+mongodb = { version = "3", optional = true }
+futures-util = { version = "0.3", optional = true }
 
 [profile.release]
 lto = true

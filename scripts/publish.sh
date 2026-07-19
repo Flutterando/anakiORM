@@ -35,10 +35,10 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Packages in dependency order (anaki_orm first, then drivers)
-PACKAGES="anaki_orm anaki_sqlite anaki_postgres anaki_mysql anaki_mssql"
+PACKAGES="anaki_orm anaki_sqlite anaki_postgres anaki_mysql anaki_mssql anaki_redis anaki_mongodb"
 
 # Drivers that need native libs
-DRIVERS="anaki_sqlite anaki_postgres anaki_mysql anaki_mssql"
+DRIVERS="anaki_sqlite anaki_postgres anaki_mysql anaki_mssql anaki_redis anaki_mongodb"
 
 PLATFORMS="darwin-arm64 darwin-x64 linux-x64 windows-x64"
 

@@ -6,10 +6,14 @@ workspace:
   - packages/anaki_postgres
   - packages/anaki_mysql
   - packages/anaki_mssql
+  - packages/anaki_redis
+  - packages/anaki_mongodb
   - example/shelf_sqlite_example
   - example/shelf_postgres_example
   - example/shelf_mysql_example
   - example/shelf_mssql_example
+  - example/shelf_redis_example
+  - example/shelf_mongodb_example
   - example/vaden_anaki_example
 
 environment:

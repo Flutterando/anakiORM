@@ -22,6 +22,8 @@ A Dapper-style database toolkit for Dart — SQL-first, simple mapping, native p
 | [`anaki_postgres`](packages/anaki_postgres/) | PostgreSQL | ✅ Ready |
 | [`anaki_mysql`](packages/anaki_mysql/) | MySQL | ✅ Ready |
 | [`anaki_mssql`](packages/anaki_mssql/) | SQL Server | ✅ Ready |
+| [`anaki_redis`](packages/anaki_redis/) | Redis (key-value client) | ✅ Ready |
+| [`anaki_mongodb`](packages/anaki_mongodb/) | MongoDB (document client) | ✅ Ready |
 | `anaki_oracle` | Oracle | 🔜 Deferred |
 
 ## Get Started
