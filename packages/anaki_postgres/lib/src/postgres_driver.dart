@@ -55,11 +55,17 @@ class PostgresDriver implements AnakiDriver {
        _poolConfig = poolConfig;
 
   void _ensureLoaded() {
-    if (!_loaded) {
-      final lib = _loadLibrary();
-      _bindings = AnakiPostgresBindings.fromLibrary(lib);
-      _loaded = true;
+    if (_loaded) return;
+    // Prefer the native-assets runtime (resolves the asset bundled by
+    // `dart build`/`flutter build`, e.g. the macOS framework layout).
+    // Fall back to the filesystem search for environments without the
+    // build hook (monorepo dev, prebuilt dylib next to the executable).
+    try {
+      _bindings = AnakiPostgresBindings.fromNativeAssets();
+    } catch (_) {
+      _bindings = AnakiPostgresBindings.fromLibrary(_loadLibrary());
     }
+    _loaded = true;
   }
 
   static bool _isArm64() {
