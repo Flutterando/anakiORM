@@ -54,8 +54,12 @@ void main(List<String> args) async {
     final outputFileName = os == OS.windows
         ? 'anaki_mongodb.dll'
         : 'libanaki_mongodb.$ext';
+    // outputDirectory (NOT outputDirectoryShared): it is unique per build
+    // config, so each architecture of a universal macOS build gets its own
+    // copy. The shared directory made both arm64/x64 slices point to the
+    // same file (last write wins), breaking lipo with duplicate archs.
     final outputFile = File.fromUri(
-      input.outputDirectoryShared.resolve(outputFileName),
+      input.outputDirectory.resolve(outputFileName),
     );
     await file.copy(outputFile.path);
 
