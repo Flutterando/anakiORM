@@ -116,7 +116,7 @@ verify_login() {
   print_header "Verifying pub.dev Login"
   
   # Check if credentials exist
-  if [ -f "$HOME/.config/dart/pub-credentials.json" ] || [ -f "$HOME/.pub-cache/credentials.json" ]; then
+  if [ -f "$HOME/.config/dart/pub-credentials.json" ] || [ -f "$HOME/.pub-cache/credentials.json" ] || [ -f "$HOME/Library/Application Support/dart/pub-credentials.json" ]; then
     print_success "pub.dev credentials found"
     return 0
   else
