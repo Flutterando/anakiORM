@@ -163,7 +163,23 @@ publish_package() {
     else
       print_success "Dry-run passed!"
     fi
+
+    # Driver packages must ship the binaries INSIDE the tarball — a stray
+    # gitignore rule can silently drop them (pub excludes gitignored files).
+    if [ -d native_libs ]; then
+      if ! echo "$output" | grep -q "native_libs"; then
+        print_error "Archive does not contain native_libs/ — binaries would be missing on pub.dev!"
+        return 1
+      fi
+    fi
   else
+    # Same tarball-content gate before a real publish.
+    if [ -d native_libs ]; then
+      if ! dart pub publish --dry-run 2>&1 | grep -q "native_libs"; then
+        print_error "Archive does not contain native_libs/ — refusing to publish!"
+        return 1
+      fi
+    fi
     print_warning "Publishing to pub.dev..."
     if dart pub publish --force; then
       print_success "Published $package v$version!"

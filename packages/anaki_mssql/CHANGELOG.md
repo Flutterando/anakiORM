@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Fix pub.dev packaging: native binaries are now really inside the published archive (0.1.1 tarballs were missing native_libs/ because a repo-root gitignore rule excluded them from `dart pub publish`)
+
 ## 0.1.1
 
 - DATETIME/DATETIME2/DATETIMEOFFSET/DATE/TIME, DECIMAL/NUMERIC and GUID columns now decode correctly (previously returned null); timestamps as RFC3339/ISO-8601, decimals as precision-preserving strings

@@ -6,7 +6,6 @@ pubspec.lock
 
 # Native libraries (built locally, not committed to git)
 # These ARE included in pub.dev packages via .pubignore
-packages/*/native_libs/
 
 # Rust build artifacts
 rust/target/

@@ -1,6 +1,6 @@
 name: anaki_sqlite
 description: SQLite driver for AnakiORM. Native connector via Rust FFI.
-version: 0.1.1
+version: 0.1.2
 homepage: https://github.com/anaki/anaki_orm
 resolution: workspace
 

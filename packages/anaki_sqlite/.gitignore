@@ -1,0 +1,3 @@
+# Kept out of git (large build artifacts) but INCLUDED in pub publish:
+# the .pubignore in this directory replaces this file for publishing.
+native_libs/

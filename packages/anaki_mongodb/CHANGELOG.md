@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Fix pub.dev packaging: native binaries are now really inside the published archive (0.1.1 tarballs were missing native_libs/ because a repo-root gitignore rule excluded them from `dart pub publish`)
+
 ## 0.1.1
 
 - Native library loads via the native-assets asset id (works with `flutter build` framework bundling), with filesystem search as fallback (#6)

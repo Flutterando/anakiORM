@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Fix pub.dev packaging: native binaries are now really inside the published archive (0.1.1 tarballs were missing native_libs/ because a repo-root gitignore rule excluded them from `dart pub publish`)
+
 ## 0.1.1
 
 - FFI exports are panic-safe: internal panics become error responses instead of aborting the host process (#2)
