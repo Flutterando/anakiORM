@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- Version alignment release — no code changes; see the driver packages for the native fixes
+
 ## 0.1.0
 
 - Initial release

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.1
+
+- DECIMAL/NUMERIC and DATE/TIME/DATETIME/TIMESTAMP/YEAR columns now decode correctly (previously returned null); timestamps as RFC3339/ISO-8601, decimals as precision-preserving strings
+- FFI exports are panic-safe: internal panics become error responses instead of aborting the host process (#2)
+- Query rows keep the SELECT column order instead of returning alphabetically sorted keys (#5)
+- Native library loads via the native-assets asset id (works with `flutter build` framework bundling), with filesystem search as fallback (#6)
+- Prebuilt native binaries included for all supported platforms (#4)
+- New build target: Linux ARM64 (aarch64)
+
 ## 0.1.0
 
 - Initial release

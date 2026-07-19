@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+- Native library loads via the native-assets asset id (works with `flutter build` framework bundling), with filesystem search as fallback (#6)
+- New build target: Linux ARM64 (aarch64)
+
 ## 0.1.0
 
 - Initial release: MongoDB document client (`AnakiMongoDb`/`MongoCollection`) over the AnakiORM native Rust connector.
