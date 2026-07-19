@@ -1,0 +1,6 @@
+-- db: mssql-local
+-- limit: 100
+SELECT u.name, o.total, o.status, o.created_at
+FROM dbo.orders o
+JOIN dbo.users u ON u.id = o.user_id
+ORDER BY o.id;

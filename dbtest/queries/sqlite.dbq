@@ -1,0 +1,6 @@
+-- db: anaki_test.db
+-- limit: 100
+SELECT u.name, t.title, t.done
+FROM tasks t
+JOIN users u ON u.id = t.user_id
+ORDER BY t.id;

@@ -1,0 +1,5 @@
+-- db: mysql-local
+-- limit: 100
+SELECT name, price, stock
+FROM products
+ORDER BY price DESC;

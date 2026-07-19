@@ -1,0 +1,102 @@
+name: anaki-dbtest
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: anaki-postgres
+    environment:
+      POSTGRES_USER: anaki
+      POSTGRES_PASSWORD: anaki123
+      POSTGRES_DB: anaki_dev
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./init/postgres:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anaki -d anaki_dev"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mysql:
+    image: mysql:8
+    container_name: anaki-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_USER: anaki
+      MYSQL_PASSWORD: anaki123
+      MYSQL_DATABASE: anaki_dev
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./init/mysql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot123"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: anaki-mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Anaki!Pass123"
+    ports:
+      - "1434:1433"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Anaki!Pass123' -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  mongo:
+    image: mongo:7
+    container_name: anaki-dbtest-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: anaki
+      MONGO_INITDB_ROOT_PASSWORD: anaki123
+      MONGO_INITDB_DATABASE: anaki_dev
+    ports:
+      - "27018:27017"
+    volumes:
+      - ./init/mongo:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "-u", "anaki", "-p", "anaki123", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: anaki-dbtest-redis
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis-init:
+    image: redis:7
+    container_name: anaki-dbtest-redis-init
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./init/redis:/init
+    entrypoint: ["sh", "-c", "redis-cli -h redis < /init/seed.redis"]
+    restart: "no"
+
+  mssql-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: anaki-mssql-init
+    depends_on:
+      mssql:
+        condition: service_healthy
+    volumes:
+      - ./init/mssql:/init
+    entrypoint: >
+      /opt/mssql-tools18/bin/sqlcmd -S mssql -U sa -P 'Anaki!Pass123' -C -i /init/init.sql
+    restart: "no"

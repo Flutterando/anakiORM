@@ -1,0 +1,6 @@
+-- db: pg-local
+-- limit: 100
+SELECT u.name, p.title, p.published, p.created_at
+FROM posts p
+JOIN users u ON u.id = p.user_id
+ORDER BY p.id;

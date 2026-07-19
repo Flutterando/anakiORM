@@ -1,0 +1,8 @@
+DEL greeting counter user:1 user:2 tasks tags scores
+SET greeting "hello from anaki dbtest"
+SET counter 42
+HSET user:1 name "Lara" email "lara@example.com"
+HSET user:2 name "Marco" email "marco@example.com"
+RPUSH tasks "testar cockpit db" "subir redis" "escrever seed"
+SADD tags anaki redis cockpit
+ZADD scores 100 "Lara" 85 "Marco"

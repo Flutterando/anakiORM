@@ -21,3 +21,5 @@ Thumbs.db
 
 # Logs
 *.log
+.cockpit/worktrees/
+dbtest/*.db

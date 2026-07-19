@@ -1,0 +1,9 @@
+{
+  "databases": [
+    { "name": "pg-local", "url": "postgres://anaki:anaki123@localhost:5434/anaki_dev" },
+    { "name": "mysql-local", "url": "mysql://anaki:anaki123@localhost:3307/anaki_dev" },
+    { "name": "mssql-local", "url": "mssql://sa:Anaki!Pass123@localhost:1434/anaki_dev?trustcert=true" },
+    { "name": "redis-local", "url": "redis://localhost:6380/0" },
+    { "name": "mongo-local", "url": "mongodb://anaki:anaki123@localhost:27018/anaki_dev?authSource=admin" }
+  ]
+}
