@@ -184,26 +184,47 @@ fn row_to_map(row: &tiberius::Row) -> serde_json::Map<String, serde_json::Value>
                     _ => serde_json::Value::Null,
                 }
             }
+            // Decimal as string to preserve precision (never f64)
             ColumnType::Decimaln | ColumnType::Numericn => {
-                match row.try_get::<f64, _>(name.as_str()) {
-                    Ok(Some(v)) => serde_json::Number::from_f64(v)
-                        .map(serde_json::Value::Number)
-                        .unwrap_or(serde_json::Value::Null),
-                    _ => match row.try_get::<&str, _>(name.as_str()) {
-                        Ok(Some(v)) => serde_json::Value::String(v.to_string()),
-                        _ => serde_json::Value::Null,
-                    },
+                match row.try_get::<rust_decimal::Decimal, _>(name.as_str()) {
+                    Ok(Some(v)) => serde_json::Value::String(v.to_string()),
+                    _ => serde_json::Value::Null,
                 }
             }
             ColumnType::Datetime | ColumnType::Datetime2 | ColumnType::Datetime4
-            | ColumnType::Datetimen | ColumnType::DatetimeOffsetn | ColumnType::Daten
-            | ColumnType::Timen => {
-                match row.try_get::<&str, _>(name.as_str()) {
+            | ColumnType::Datetimen => {
+                match row.try_get::<chrono::NaiveDateTime, _>(name.as_str()) {
+                    Ok(Some(v)) => serde_json::Value::String(
+                        v.format("%Y-%m-%dT%H:%M:%S%.f").to_string(),
+                    ),
+                    _ => serde_json::Value::Null,
+                }
+            }
+            ColumnType::DatetimeOffsetn => {
+                match row.try_get::<chrono::DateTime<chrono::Utc>, _>(name.as_str()) {
+                    Ok(Some(v)) => serde_json::Value::String(v.to_rfc3339()),
+                    _ => serde_json::Value::Null,
+                }
+            }
+            ColumnType::Daten => {
+                match row.try_get::<chrono::NaiveDate, _>(name.as_str()) {
+                    Ok(Some(v)) => serde_json::Value::String(v.to_string()),
+                    _ => serde_json::Value::Null,
+                }
+            }
+            ColumnType::Timen => {
+                match row.try_get::<chrono::NaiveTime, _>(name.as_str()) {
                     Ok(Some(v)) => serde_json::Value::String(v.to_string()),
                     _ => serde_json::Value::Null,
                 }
             }
             ColumnType::Guid => {
+                match row.try_get::<tiberius::Uuid, _>(name.as_str()) {
+                    Ok(Some(v)) => serde_json::Value::String(v.to_string()),
+                    _ => serde_json::Value::Null,
+                }
+            }
+            ColumnType::Xml => {
                 match row.try_get::<&str, _>(name.as_str()) {
                     Ok(Some(v)) => serde_json::Value::String(v.to_string()),
                     _ => serde_json::Value::Null,

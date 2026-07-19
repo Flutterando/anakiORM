@@ -127,18 +127,19 @@ fn row_to_map(row: &PgRow) -> serde_json::Map<String, serde_json::Value> {
                     _ => serde_json::Value::Null,
                 }
             }
-            "FLOAT8" | "DOUBLE PRECISION" | "NUMERIC" => {
+            "FLOAT8" | "DOUBLE PRECISION" => {
                 match row.try_get::<Option<f64>, _>(i) {
                     Ok(Some(v)) => serde_json::Number::from_f64(v)
                         .map(serde_json::Value::Number)
                         .unwrap_or(serde_json::Value::Null),
-                    _ => {
-                        // NUMERIC might not decode as f64, try as string
-                        match row.try_get::<Option<String>, _>(i) {
-                            Ok(Some(v)) => serde_json::Value::String(v),
-                            _ => serde_json::Value::Null,
-                        }
-                    }
+                    _ => serde_json::Value::Null,
+                }
+            }
+            // Decimal as string to preserve precision (never f64)
+            "NUMERIC" => {
+                match row.try_get::<Option<sqlx::types::Decimal>, _>(i) {
+                    Ok(Some(v)) => serde_json::Value::String(v.to_string()),
+                    _ => serde_json::Value::Null,
                 }
             }
             "BOOL" | "BOOLEAN" => {
@@ -167,8 +168,8 @@ fn row_to_map(row: &PgRow) -> serde_json::Map<String, serde_json::Value> {
                 }
             }
             "UUID" => {
-                match row.try_get::<Option<String>, _>(i) {
-                    Ok(Some(v)) => serde_json::Value::String(v),
+                match row.try_get::<Option<sqlx::types::Uuid>, _>(i) {
+                    Ok(Some(v)) => serde_json::Value::String(v.to_string()),
                     _ => serde_json::Value::Null,
                 }
             }
@@ -178,9 +179,39 @@ fn row_to_map(row: &PgRow) -> serde_json::Map<String, serde_json::Value> {
                     _ => serde_json::Value::Null,
                 }
             }
-            "TIMESTAMP" | "TIMESTAMPTZ" | "DATE" | "TIME" | "TIMETZ" => {
-                match row.try_get::<Option<String>, _>(i) {
-                    Ok(Some(v)) => serde_json::Value::String(v),
+            "TIMESTAMPTZ" => {
+                use sqlx::types::chrono::{DateTime, Utc};
+                match row.try_get::<Option<DateTime<Utc>>, _>(i) {
+                    Ok(Some(v)) => serde_json::Value::String(v.to_rfc3339()),
+                    _ => serde_json::Value::Null,
+                }
+            }
+            "TIMESTAMP" => {
+                match row.try_get::<Option<sqlx::types::chrono::NaiveDateTime>, _>(i) {
+                    Ok(Some(v)) => serde_json::Value::String(
+                        v.format("%Y-%m-%dT%H:%M:%S%.f").to_string(),
+                    ),
+                    _ => serde_json::Value::Null,
+                }
+            }
+            "DATE" => {
+                match row.try_get::<Option<sqlx::types::chrono::NaiveDate>, _>(i) {
+                    Ok(Some(v)) => serde_json::Value::String(v.to_string()),
+                    _ => serde_json::Value::Null,
+                }
+            }
+            "TIME" => {
+                match row.try_get::<Option<sqlx::types::chrono::NaiveTime>, _>(i) {
+                    Ok(Some(v)) => serde_json::Value::String(v.to_string()),
+                    _ => serde_json::Value::Null,
+                }
+            }
+            "TIMETZ" => {
+                use sqlx::postgres::types::PgTimeTz;
+                match row.try_get::<Option<PgTimeTz>, _>(i) {
+                    Ok(Some(v)) => {
+                        serde_json::Value::String(format!("{}{}", v.time, v.offset))
+                    }
                     _ => serde_json::Value::Null,
                 }
             }

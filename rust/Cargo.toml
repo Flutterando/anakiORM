@@ -11,7 +11,7 @@ default = []
 sqlite = ["dep:sqlx", "sqlx/sqlite"]
 postgres = ["dep:sqlx", "sqlx/postgres"]
 mysql = ["dep:sqlx", "sqlx/mysql"]
-mssql = ["dep:tiberius", "dep:tokio-util"]
+mssql = ["dep:tiberius", "tiberius/chrono", "tiberius/rust_decimal", "dep:tokio-util", "dep:chrono", "dep:rust_decimal"]
 oracle = ["dep:sibyl"]
 redis = ["dep:redis"]
 mongodb = ["dep:mongodb", "dep:futures-util"]
@@ -26,12 +26,16 @@ serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 async-trait = "0.1"
 
-# sqlx — shared across sqlite, postgres, mysql
-sqlx = { version = "0.8", features = ["runtime-tokio"], optional = true }
+# sqlx — shared across sqlite, postgres, mysql.
+# chrono/rust_decimal/uuid: without these, timestamptz/decimal/uuid columns
+# fail to decode and were silently returned as NULL.
+sqlx = { version = "0.8", features = ["runtime-tokio", "chrono", "rust_decimal", "uuid"], optional = true }
 
 # mssql (SQL Server)
-tiberius = { version = "0.12", default-features = false, features = ["rustls"], optional = true }
+tiberius = { version = "0.12", default-features = false, features = ["rustls", "tds73"], optional = true }
 tokio-util = { version = "0.7", features = ["compat"], optional = true }
+chrono = { version = "0.4", optional = true }
+rust_decimal = { version = "1", optional = true }
 
 # oracle
 sibyl = { version = "0.6", optional = true }

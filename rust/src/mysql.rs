@@ -126,18 +126,19 @@ fn row_to_map(row: &MySqlRow) -> serde_json::Map<String, serde_json::Value> {
                     _ => serde_json::Value::Null,
                 }
             }
-            "DOUBLE" | "DECIMAL" | "NUMERIC" => {
+            "DOUBLE" => {
                 match row.try_get::<Option<f64>, _>(i) {
                     Ok(Some(v)) => serde_json::Number::from_f64(v)
                         .map(serde_json::Value::Number)
                         .unwrap_or(serde_json::Value::Null),
-                    _ => {
-                        // DECIMAL might not decode as f64, try as string
-                        match row.try_get::<Option<String>, _>(i) {
-                            Ok(Some(v)) => serde_json::Value::String(v),
-                            _ => serde_json::Value::Null,
-                        }
-                    }
+                    _ => serde_json::Value::Null,
+                }
+            }
+            // Decimal as string to preserve precision (never f64)
+            "DECIMAL" | "NUMERIC" => {
+                match row.try_get::<Option<sqlx::types::Decimal>, _>(i) {
+                    Ok(Some(v)) => serde_json::Value::String(v.to_string()),
+                    _ => serde_json::Value::Null,
                 }
             }
             "VARCHAR" | "CHAR" | "TEXT" | "TINYTEXT" | "MEDIUMTEXT" | "LONGTEXT"
@@ -166,9 +167,36 @@ fn row_to_map(row: &MySqlRow) -> serde_json::Map<String, serde_json::Value> {
                     _ => serde_json::Value::Null,
                 }
             }
-            "DATE" | "TIME" | "DATETIME" | "TIMESTAMP" | "YEAR" => {
-                match row.try_get::<Option<String>, _>(i) {
-                    Ok(Some(v)) => serde_json::Value::String(v),
+            "DATE" => {
+                match row.try_get::<Option<sqlx::types::chrono::NaiveDate>, _>(i) {
+                    Ok(Some(v)) => serde_json::Value::String(v.to_string()),
+                    _ => serde_json::Value::Null,
+                }
+            }
+            "TIME" => {
+                match row.try_get::<Option<sqlx::types::chrono::NaiveTime>, _>(i) {
+                    Ok(Some(v)) => serde_json::Value::String(v.to_string()),
+                    _ => serde_json::Value::Null,
+                }
+            }
+            "DATETIME" => {
+                match row.try_get::<Option<sqlx::types::chrono::NaiveDateTime>, _>(i) {
+                    Ok(Some(v)) => serde_json::Value::String(
+                        v.format("%Y-%m-%dT%H:%M:%S%.f").to_string(),
+                    ),
+                    _ => serde_json::Value::Null,
+                }
+            }
+            "TIMESTAMP" => {
+                use sqlx::types::chrono::{DateTime, Utc};
+                match row.try_get::<Option<DateTime<Utc>>, _>(i) {
+                    Ok(Some(v)) => serde_json::Value::String(v.to_rfc3339()),
+                    _ => serde_json::Value::Null,
+                }
+            }
+            "YEAR" => {
+                match row.try_get::<Option<u16>, _>(i) {
+                    Ok(Some(v)) => serde_json::Value::Number(v.into()),
                     _ => serde_json::Value::Null,
                 }
             }
