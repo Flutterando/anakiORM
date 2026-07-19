@@ -14,7 +14,11 @@ Each driver is a separate Dart package that implements the `AnakiDriver` interfa
 | `anaki_postgres` | PostgreSQL | `generic` | ✅ Ready |
 | `anaki_mysql` | MySQL | `generic` | ✅ Ready |
 | `anaki_mssql` | SQL Server | `mssql` | ✅ Ready |
+| `anaki_redis` | Redis (key-value) | —¹ | ✅ Ready |
+| `anaki_mongodb` | MongoDB (documents) | —¹ | ✅ Ready |
 | `anaki_oracle` | Oracle | — | 🔜 Deferred |
+
+¹ Non-SQL clients: they do not implement `AnakiDriver` and are not used through `AnakiDb` — see section 6.5.
 
 ---
 
@@ -344,6 +348,51 @@ The Oracle driver is planned but deferred due to the complexity of Oracle Instan
 - Oracle Instant Client installed
 - Environment variables configured
 - Oracle licensing
+
+---
+
+## 6.5 Non-SQL Clients (Redis & MongoDB)
+
+Redis and MongoDB reuse the same native Rust connector infrastructure (10 FFI
+functions, JSON wire, per-driver dylib) but are **not SQL databases**, so they
+ship dedicated facades instead of implementing `AnakiDriver`:
+
+| | `anaki_redis` | `anaki_mongodb` |
+|---|---|---|
+| Entry point | `AnakiRedis` | `AnakiMongoDb` + `MongoCollection` |
+| Command wire | JSON array (`["SET","k","v"]`) | JSON envelope (`{"op":"find",...}`) |
+| Transactions | ✗ (atomic `pipeline()` = MULTI/EXEC) | ✓ real sessions — **requires replica set** |
+| Pagination | — | `findPaged` (skip/limit + countDocuments) |
+| Reused from `anaki_orm` | exceptions, `PoolConfig`, `RowAdapter` | exceptions, `PoolConfig`, `RowAdapter`, `PagedResult` |
+| Escape hatch | `command([...])` | `runCommand({...})` |
+| Rust crate | redis (feature `redis`) | mongodb (feature `mongodb`) |
+
+```dart
+// Redis
+final redis = AnakiRedis(host: 'localhost', password: 'secret');
+await redis.open();
+await redis.set('k', 'v', ttl: Duration(minutes: 5));
+await redis.pipeline((p) { p.incr('visits'); p.expire('visits', Duration(days: 1)); });
+
+// MongoDB
+final mongo = AnakiMongoDb(MongoDriver(host: 'localhost', database: 'app'));
+await mongo.open();
+final id = await mongo.collection('users').insertOne({'name': 'Ana', 'createdAt': DateTime.now()});
+final ana = await mongo.collection('users').findOne({'_id': id});
+await mongo.transaction((tx) async { /* multi-document, replica set required */ });
+```
+
+Notes:
+
+- MongoDB documents cross the FFI boundary as relaxed extended JSON; the Dart
+  facade converts `{"$oid"}`/`{"$date"}` to `ObjectId`/`DateTime` automatically
+  (opt out with `extendedJsonCodec: false`).
+- `insertOne` returns the `_id`, generating a client-side `ObjectId` when absent.
+- Redis v1 cuts: pub/sub, blocking commands, WATCH, TLS. MongoDB v1 cuts:
+  findOneAndUpdate, mixed bulkWrite, change streams, GridFS.
+- Integration environments live in `example/shelf_redis_example/` (redis:7 with
+  `requirepass`) and `example/shelf_mongodb_example/` (mongo:7 single-node
+  replica set — the compose healthcheck runs `rs.initiate`).
 
 ---
 

@@ -37,7 +37,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 CRATE_DIR="$ROOT_DIR/rust"
 
-DRIVERS="sqlite postgres mysql mssql"
+DRIVERS="sqlite postgres mysql mssql redis mongodb"
 
 # Targets for pub.dev distribution
 ALL_TARGETS="aarch64-apple-darwin x86_64-apple-darwin x86_64-unknown-linux-gnu x86_64-pc-windows-gnu"

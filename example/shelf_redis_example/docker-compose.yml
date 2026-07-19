@@ -1,0 +1,13 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: anaki_redis
+    restart: unless-stopped
+    command: ['redis-server', '--requirepass', 'anaki']
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', 'anaki', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5

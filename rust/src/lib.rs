@@ -11,6 +11,10 @@ mod postgres;
 mod mysql;
 #[cfg(feature = "mssql")]
 mod mssql;
+#[cfg(feature = "redis")]
+mod redis;
+#[cfg(feature = "mongodb")]
+mod mongo;
 // #[cfg(feature = "oracle")]
 // mod oracle;
 
@@ -128,6 +132,18 @@ async fn create_connector(config_json: &str) -> Result<Box<dyn DatabaseConnector
     #[cfg(feature = "mssql")]
     {
         let conn = mssql::MssqlConnector::open(config_json).await?;
+        return Ok(Box::new(conn));
+    }
+
+    #[cfg(feature = "redis")]
+    {
+        let conn = redis::RedisConnector::open(config_json).await?;
+        return Ok(Box::new(conn));
+    }
+
+    #[cfg(feature = "mongodb")]
+    {
+        let conn = mongo::MongoConnector::open(config_json).await?;
         return Ok(Box::new(conn));
     }
 
