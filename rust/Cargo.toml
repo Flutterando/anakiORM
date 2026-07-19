@@ -17,7 +17,9 @@ oracle = ["dep:sibyl"]
 [dependencies]
 tokio = { version = "1", features = ["rt-multi-thread"] }
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+# preserve_order: rows must keep SELECT column order (serde_json::Map is
+# otherwise a BTreeMap that sorts keys alphabetically)
+serde_json = { version = "1", features = ["preserve_order"] }
 async-trait = "0.1"
 
 # sqlx — shared across sqlite, postgres, mysql
