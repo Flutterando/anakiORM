@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Fix BINARY/VARBINARY values being hex-encoded even when they are text: MySQL reports text columns with a binary collation (e.g. `SHOW TABLES` / information_schema metadata) as VARBINARY, so table names came back as hex strings. Valid UTF-8 is now decoded as text; only genuinely binary payloads fall back to hex
+
 ## 0.1.3
 
 - Fix universal (arm64+x64) macOS builds: the build hook now copies the binary into the per-config output directory, so each architecture slice gets its own file (previously both slices pointed at the same dylib and lipo failed with duplicate architectures)

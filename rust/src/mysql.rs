@@ -149,15 +149,23 @@ fn row_to_map(row: &MySqlRow) -> serde_json::Map<String, serde_json::Value> {
                 }
             }
             "BLOB" | "TINYBLOB" | "MEDIUMBLOB" | "LONGBLOB" | "BINARY" | "VARBINARY" => {
+                // MySQL reports text columns with a binary collation (e.g. the
+                // metadata columns behind SHOW TABLES / information_schema) as
+                // VARBINARY. Decode valid UTF-8 as text; only fall back to hex
+                // for genuinely binary payloads.
                 match row.try_get::<Option<Vec<u8>>, _>(i) {
-                    Ok(Some(v)) => {
-                        use std::fmt::Write;
-                        let mut hex = String::with_capacity(v.len() * 2);
-                        for byte in &v {
-                            write!(hex, "{:02x}", byte).unwrap();
+                    Ok(Some(v)) => match String::from_utf8(v) {
+                        Ok(s) => serde_json::Value::String(s),
+                        Err(e) => {
+                            use std::fmt::Write;
+                            let v = e.into_bytes();
+                            let mut hex = String::with_capacity(v.len() * 2);
+                            for byte in &v {
+                                write!(hex, "{:02x}", byte).unwrap();
+                            }
+                            serde_json::Value::String(hex)
                         }
-                        serde_json::Value::String(hex)
-                    }
+                    },
                     _ => serde_json::Value::Null,
                 }
             }
