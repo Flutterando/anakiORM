@@ -40,7 +40,7 @@ PACKAGES="anaki_orm anaki_sqlite anaki_postgres anaki_mysql anaki_mssql anaki_re
 # Drivers that need native libs
 DRIVERS="anaki_sqlite anaki_postgres anaki_mysql anaki_mssql anaki_redis anaki_mongodb"
 
-PLATFORMS="darwin-arm64 darwin-x64 linux-x64 windows-x64"
+PLATFORMS="darwin-arm64 darwin-x64 linux-x64 linux-arm64 windows-x64"
 
 print_header() {
   printf "\n${BLUE}═══════════════════════════════════════════${NC}\n"

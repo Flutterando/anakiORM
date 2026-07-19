@@ -27,7 +27,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 DRIVERS="sqlite postgres mysql mssql redis mongodb"
-PLATFORMS="darwin-arm64 darwin-x64 linux-x64 windows-x64"
+PLATFORMS="darwin-arm64 darwin-x64 linux-x64 linux-arm64 windows-x64"
 
 print_header() {
   printf "\n${BLUE}═══════════════════════════════════════════${NC}\n"
