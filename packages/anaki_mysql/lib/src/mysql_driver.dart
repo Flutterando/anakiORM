@@ -28,6 +28,7 @@ class MysqlDriver implements AnakiDriver {
   final String _username;
   final String _password;
   final String _database;
+  final String? _sslMode;
   final PoolConfig _poolConfig;
 
   late final AnakiMysqlBindings _bindings;
@@ -43,24 +44,29 @@ class MysqlDriver implements AnakiDriver {
     required String username,
     String password = '',
     required String database,
+    String? sslMode,
     PoolConfig poolConfig = const PoolConfig(),
   }) : _host = host,
        _port = port,
        _username = username,
        _password = password,
        _database = database,
+       _sslMode = sslMode,
        _poolConfig = poolConfig;
 
   void _ensureLoaded() {
     if (_loaded) return;
-    // Prefer the native-assets runtime (resolves the asset bundled by
-    // `dart build`/`flutter build`, e.g. the macOS framework layout).
-    // Fall back to the filesystem search for environments without the
-    // build hook (monorepo dev, prebuilt dylib next to the executable).
+    // Prefer an explicit library handle: every anaki driver dylib exports the
+    // same 10 symbols, and the @Native asset binding falls back to a
+    // process-wide dlsym when the asset isn't bundled — with two drivers
+    // loaded, that resolves into whichever dylib loaded first. An explicit
+    // DynamicLibrary lookup is scoped to this driver's own file. Native
+    // assets remain the fallback for bundled builds (`dart build`/
+    // `flutter build`) where the file isn't on disk.
     try {
-      _bindings = AnakiMysqlBindings.fromNativeAssets();
-    } catch (_) {
       _bindings = AnakiMysqlBindings.fromLibrary(_loadLibrary());
+    } catch (_) {
+      _bindings = AnakiMysqlBindings.fromNativeAssets();
     }
     _loaded = true;
   }
@@ -178,6 +184,7 @@ class MysqlDriver implements AnakiDriver {
       'username': _username,
       'password': _password,
       'database': _database,
+      if (_sslMode != null) 'ssl_mode': _sslMode,
       'min_connections': _poolConfig.minConnections,
       'max_connections': _poolConfig.maxConnections,
     });

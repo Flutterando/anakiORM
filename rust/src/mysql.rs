@@ -21,6 +21,7 @@ struct MysqlConfig {
     #[serde(default)]
     password: String,
     database: String,
+    ssl_mode: Option<String>,
     #[serde(default = "default_min_connections")]
     min_connections: u32,
     #[serde(default = "default_max_connections")]
@@ -261,9 +262,10 @@ impl DatabaseConnector for MysqlConnector {
             AnakiError::connection(format!("Invalid config: {}", e))
         })?;
 
+        let ssl = config.ssl_mode.as_deref().unwrap_or("preferred");
         let url = format!(
-            "mysql://{}:{}@{}:{}/{}",
-            config.username, config.password, config.host, config.port, config.database
+            "mysql://{}:{}@{}:{}/{}?ssl-mode={}",
+            config.username, config.password, config.host, config.port, config.database, ssl
         );
 
         let pool = MySqlPoolOptions::new()
@@ -404,5 +406,17 @@ impl DatabaseConnector for MysqlConnector {
             Ok(_) => Ok(true),
             Err(_) => Ok(false),
         }
+    }
+}
+
+#[cfg(test)]
+mod ssl_url_tests {
+    #[test]
+    fn parse_ssl_mode_required() {
+        use std::str::FromStr;
+        let o = sqlx::mysql::MySqlConnectOptions::from_str(
+            "mysql://a:b@h:1/db?ssl-mode=required",
+        );
+        assert!(o.is_ok(), "{:?}", o.err());
     }
 }

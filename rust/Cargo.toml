@@ -29,7 +29,7 @@ async-trait = "0.1"
 # sqlx — shared across sqlite, postgres, mysql.
 # chrono/rust_decimal/uuid: without these, timestamptz/decimal/uuid columns
 # fail to decode and were silently returned as NULL.
-sqlx = { version = "0.8", features = ["runtime-tokio", "chrono", "rust_decimal", "uuid"], optional = true }
+sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "chrono", "rust_decimal", "uuid"], optional = true }
 
 # mssql (SQL Server)
 tiberius = { version = "0.12", default-features = false, features = ["rustls", "tds73"], optional = true }

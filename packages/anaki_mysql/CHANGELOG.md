@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.5
+
+- Add TLS support (rustls) and a new `sslMode` option (`disabled`, `preferred`, `required`, `verify_ca`, `verify_identity`); defaults to `preferred`. Validated against MySQL over TLS
+- Fix native symbol collision when multiple anaki drivers are loaded in the same process: the driver now binds its FFI symbols from its own library handle first, falling back to the native-assets runtime for bundled builds
+
 ## 0.1.4
 
 - Fix BINARY/VARBINARY values being hex-encoded even when they are text: MySQL reports text columns with a binary collation (e.g. `SHOW TABLES` / information_schema metadata) as VARBINARY, so table names came back as hex strings. Valid UTF-8 is now decoded as text; only genuinely binary payloads fall back to hex
