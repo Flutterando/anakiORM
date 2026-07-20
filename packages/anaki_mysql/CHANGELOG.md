@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6
+
+- Fix corrupted darwin-x64 binary that broke universal (arm64+x86_64) macOS release builds with "dsymutil failed with exit code 1": ad-hoc re-signing the cross-compiled x86_64 dylib left it unparseable by dsymutil. The binary is rebuilt and shipped as produced by the linker; the publish script now gates macOS binaries on a dsymutil parse check
+
 ## 0.1.5
 
 - Add TLS support (rustls) and a new `sslMode` option (`disabled`, `preferred`, `required`, `verify_ca`, `verify_identity`); defaults to `preferred`. Validated against MySQL over TLS

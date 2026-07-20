@@ -90,6 +90,22 @@ verify_native_libs() {
       expected_file="$native_dir/${prefix}anaki_${driver_short}-${platform}.${ext}"
       
       if [ -f "$expected_file" ]; then
+        # macOS binaries must be parseable by dsymutil: flutter's universal
+        # build runs dsymutil on the lipo'd framework, and a binary it cannot
+        # parse (seen after codesign rewrote a zigbuild x86_64 dylib) breaks
+        # every consumer's release build.
+        case "$platform" in
+          darwin-*)
+            if command -v dsymutil >/dev/null 2>&1; then
+              if ! dsymutil -o /tmp/anaki_dsym_check.dSYM "$expected_file" >/dev/null 2>&1; then
+                print_error "$platform - dsymutil cannot parse $expected_file (would break universal macOS builds)"
+                all_ok=false
+                continue
+              fi
+              rm -rf /tmp/anaki_dsym_check.dSYM
+            fi
+            ;;
+        esac
         size=$(du -h "$expected_file" | cut -f1)
         print_success "$platform ($size)"
       else
