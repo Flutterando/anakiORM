@@ -46,14 +46,17 @@ class RedisDriver implements RedisDriverBase {
 
   void _ensureLoaded() {
     if (_loaded) return;
-    // Prefer the native-assets runtime (resolves the asset bundled by
-    // `dart build`/`flutter build`, e.g. the macOS framework layout).
-    // Fall back to the filesystem search for environments without the
-    // build hook (monorepo dev, prebuilt dylib next to the executable).
+    // Prefer an explicit library handle: every anaki driver dylib exports the
+    // same 10 symbols, and the @Native asset binding falls back to a
+    // process-wide dlsym when the asset isn't bundled — with two drivers
+    // loaded, that resolves into whichever dylib loaded first. An explicit
+    // DynamicLibrary lookup is scoped to this driver's own file. Native
+    // assets remain the fallback for bundled builds (`dart build`/
+    // `flutter build`) where the file isn't on disk.
     try {
-      _bindings = AnakiRedisBindings.fromNativeAssets();
-    } catch (_) {
       _bindings = AnakiRedisBindings.fromLibrary(_loadLibrary());
+    } catch (_) {
+      _bindings = AnakiRedisBindings.fromNativeAssets();
     }
     _loaded = true;
   }
