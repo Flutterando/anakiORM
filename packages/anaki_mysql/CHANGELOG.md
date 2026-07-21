@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.7
+
+- Fix connection failures with passwords containing URL-reserved characters (`/ ? # %` and friends): credentials were spliced raw into a connection URL, so `/ ? #` surfaced as "invalid port number" and `%` sequences were percent-decoded into a different password. Connect options are now built programmatically (never through a URL); covered by regression tests including unicode passwords
+
 ## 0.1.6
 
 - Fix corrupted darwin-x64 binary that broke universal (arm64+x86_64) macOS release builds with "dsymutil failed with exit code 1": ad-hoc re-signing the cross-compiled x86_64 dylib left it unparseable by dsymutil. The binary is rebuilt and shipped as produced by the linker; the publish script now gates macOS binaries on a dsymutil parse check

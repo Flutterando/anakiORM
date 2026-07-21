@@ -1,6 +1,6 @@
 use crate::connector::DatabaseConnector;
 use crate::error::AnakiError;
-use sqlx::postgres::{PgPool, PgPoolOptions, PgRow};
+use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions, PgRow, PgSslMode};
 use sqlx::{Column, Row, TypeInfo};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -261,6 +261,25 @@ fn bind_params<'q>(
     query
 }
 
+/// Builds connect options programmatically: credentials must never pass
+/// through a URL, where characters like `/ ? # %` corrupt the authority
+/// section (surfacing as "invalid port number") or get percent-decoded.
+fn build_connect_options(config: &PostgresConfig) -> Result<PgConnectOptions, AnakiError> {
+    use std::str::FromStr;
+    let mut opts = PgConnectOptions::new_without_pgpass()
+        .host(&config.host)
+        .port(config.port)
+        .username(&config.username)
+        .password(&config.password)
+        .database(&config.database);
+    if let Some(ssl) = config.ssl_mode.as_deref() {
+        let mode = PgSslMode::from_str(ssl)
+            .map_err(|e| AnakiError::connection(format!("Invalid ssl_mode: {}", e)))?;
+        opts = opts.ssl_mode(mode);
+    }
+    Ok(opts)
+}
+
 #[async_trait::async_trait]
 impl DatabaseConnector for PostgresConnector {
     async fn open(config_json: &str) -> Result<Self, AnakiError> {
@@ -268,16 +287,12 @@ impl DatabaseConnector for PostgresConnector {
             AnakiError::connection(format!("Invalid config: {}", e))
         })?;
 
-        let ssl = config.ssl_mode.as_deref().unwrap_or("prefer");
-        let url = format!(
-            "postgres://{}:{}@{}:{}/{}?sslmode={}",
-            config.username, config.password, config.host, config.port, config.database, ssl
-        );
+        let opts = build_connect_options(&config)?;
 
         let pool = PgPoolOptions::new()
             .min_connections(config.min_connections)
             .max_connections(config.max_connections)
-            .connect(&url)
+            .connect_with(opts)
             .await
             .map_err(|e| AnakiError::connection(format!("Failed to connect: {}", e)))?;
 
@@ -413,5 +428,57 @@ impl DatabaseConnector for PostgresConnector {
             Ok(_) => Ok(true),
             Err(_) => Ok(false),
         }
+    }
+}
+
+#[cfg(test)]
+mod connect_options_tests {
+    use super::*;
+
+    // Regression: passwords with URL-reserved characters used to be spliced
+    // into a connection URL, where `/ ? #` truncated the authority section
+    // ("invalid port number") and `%` was percent-decoded into a different
+    // password. Options are now built programmatically, so every character
+    // must survive verbatim.
+    const NASTY_PASSWORDS: &[&str] = &[
+        "p%a?s)s",
+        "pa/ss",
+        "pa#ss",
+        "p@ss:word",
+        "100%:senha/ok?#",
+        "s3nh@çãü東京",
+        "",
+    ];
+
+    fn config_with_password(password: &str) -> PostgresConfig {
+        serde_json::from_value(serde_json::json!({
+            "host": "db.rds.amazonaws.com",
+            "port": 5432,
+            "username": "user@corp",
+            "password": password,
+            "database": "mydb",
+            "ssl_mode": "require",
+        }))
+        .unwrap()
+    }
+
+    #[test]
+    fn special_character_passwords_survive() {
+        for pw in NASTY_PASSWORDS {
+            let opts = build_connect_options(&config_with_password(pw))
+                .unwrap_or_else(|e| panic!("password {:?} rejected: {:?}", pw, e));
+            assert_eq!(opts.get_host(), "db.rds.amazonaws.com", "password {:?}", pw);
+            assert_eq!(opts.get_port(), 5432, "password {:?}", pw);
+            assert_eq!(opts.get_username(), "user@corp", "password {:?}", pw);
+            assert_eq!(opts.get_database(), Some("mydb"), "password {:?}", pw);
+            assert!(matches!(opts.get_ssl_mode(), PgSslMode::Require), "password {:?}", pw);
+        }
+    }
+
+    #[test]
+    fn invalid_ssl_mode_is_rejected() {
+        let mut config = config_with_password("x");
+        config.ssl_mode = Some("bogus".to_string());
+        assert!(build_connect_options(&config).is_err());
     }
 }

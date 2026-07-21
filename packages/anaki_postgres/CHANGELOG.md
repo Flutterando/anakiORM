@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- Fix connection failures with passwords containing URL-reserved characters (`/ ? # %` and friends): credentials were spliced raw into a connection URL, so `/ ? #` surfaced as "invalid port number" and `%` sequences were percent-decoded into a different password. Connect options are now built programmatically (never through a URL); covered by regression tests including unicode passwords
+
 ## 0.1.4
 
 - Add TLS support (rustls): `sslMode: 'require'` (and other libpq sslmode values) now performs a real TLS handshake instead of failing with "SQLx was built without TLS support enabled". Validated against PostgreSQL 16 over TLSv1.3
