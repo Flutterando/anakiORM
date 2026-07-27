@@ -348,6 +348,8 @@ fn json_to_update(update: JsonValue) -> Result<mongodb::options::UpdateModificat
 #[async_trait::async_trait]
 impl DatabaseConnector for MongoConnector {
     async fn open(config_json: &str) -> Result<Self, AnakiError> {
+        #[cfg(feature = "mongo-trace")]
+        init_trace();
         let cfg: MongoConfig = serde_json::from_str(config_json)
             .map_err(|e| AnakiError::connection(format!("Invalid config JSON: {}", e)))?;
 
@@ -661,4 +663,31 @@ mod socks5_tests {
         });
         assert!(r.is_ok(), "socks5-proxy options rejected: {:?}", r.err());
     }
+}
+
+/// Diagnostic-build tracing: writes driver/SDAM/DNS events to
+/// `$ANAKI_TRACE_FILE` (or stderr) filtered by `$ANAKI_TRACE`
+/// (tracing EnvFilter syntax, e.g. "mongodb=trace"). Thread ids are
+/// included so cross-isolate calls can be distinguished.
+#[cfg(feature = "mongo-trace")]
+fn init_trace() {
+    use std::sync::Once;
+    static ONCE: Once = Once::new();
+    ONCE.call_once(|| {
+        let filter = std::env::var("ANAKI_TRACE").unwrap_or_else(|_| "mongodb=debug".into());
+        let builder = tracing_subscriber::fmt()
+            .with_env_filter(filter)
+            .with_thread_ids(true)
+            .with_ansi(false);
+        match std::env::var("ANAKI_TRACE_FILE") {
+            Ok(path) => {
+                if let Ok(file) = std::fs::File::create(&path) {
+                    let _ = builder.with_writer(std::sync::Mutex::new(file)).try_init();
+                }
+            }
+            Err(_) => {
+                let _ = builder.with_writer(std::io::stderr).try_init();
+            }
+        }
+    });
 }

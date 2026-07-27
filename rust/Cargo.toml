@@ -15,6 +15,11 @@ mssql = ["dep:tiberius", "tiberius/chrono", "tiberius/rust_decimal", "dep:tokio-
 oracle = ["dep:sibyl"]
 redis = ["dep:redis"]
 mongodb = ["dep:mongodb", "dep:futures-util"]
+# Diagnostic build only (never published): SDAM/DNS tracing to a file.
+# Build: build_native.sh mongodb won't include this — use
+#   cargo build --release --features mongodb,mongo-trace
+# and set ANAKI_TRACE (filter, e.g. "mongodb=trace") + ANAKI_TRACE_FILE.
+mongo-trace = ["mongodb/tracing-unstable", "dep:tracing-subscriber"]
 
 [dependencies]
 # "net" is required directly: mssql uses tokio::net::TcpStream and the async
@@ -49,6 +54,7 @@ redis = { version = "0.32", features = ["tokio-comp", "connection-manager"], opt
 # Cockpit's DB-over-SSH tunnel via proxyHost/proxyPort)
 mongodb = { version = "3", features = ["socks5-proxy"], optional = true }
 futures-util = { version = "0.3", optional = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"], optional = true }
 
 [profile.release]
 lto = true
