@@ -1,6 +1,6 @@
 name: anaki_mongodb
 description: MongoDB document client for AnakiORM. Native connector via Rust FFI.
-version: 0.1.4
+version: 0.1.5
 homepage: https://github.com/anaki/anaki_orm
 resolution: workspace
 

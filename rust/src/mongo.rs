@@ -647,3 +647,18 @@ impl DatabaseConnector for MongoConnector {
         Ok(self.db.run_command(doc! {"ping": 1}).await.is_ok())
     }
 }
+
+#[cfg(test)]
+mod socks5_tests {
+    #[test]
+    fn proxy_options_accepted() {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let r = rt.block_on(async {
+            mongodb::options::ClientOptions::parse(
+                "mongodb://user:pass@host:27017/db?proxyHost=127.0.0.1&proxyPort=1080",
+            )
+            .await
+        });
+        assert!(r.is_ok(), "socks5-proxy options rejected: {:?}", r.err());
+    }
+}

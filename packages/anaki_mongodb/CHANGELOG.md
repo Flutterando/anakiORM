@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- Enable the mongodb crate's `socks5-proxy` feature: connection URIs now accept `proxyHost`/`proxyPort`/`proxyUsername`/`proxyPassword` (MongoDB driver spec), allowing connections through a SOCKS5 proxy — e.g. an SSH dynamic forward — which is required for replica-set/SRV topologies where local port-forwards cannot follow server-announced hostnames. Pure-Rust dependency (fast-socks5); cross-compilation via cargo-zigbuild remains green on all 5 platforms
+
 ## 0.1.4
 
 - Fix native symbol collision when multiple anaki drivers are loaded in the same process: the driver now binds its FFI symbols from its own library handle first, falling back to the native-assets runtime for bundled builds

@@ -44,8 +44,10 @@ sibyl = { version = "0.6", optional = true }
 redis = { version = "0.32", features = ["tokio-comp", "connection-manager"], optional = true }
 
 # mongodb (default features: rustls-tls + dns-resolver; never enable
-# compression/openssl/in-use-encryption — they break cargo-zigbuild)
-mongodb = { version = "3", optional = true }
+# compression/openssl/in-use-encryption — they break cargo-zigbuild.
+# socks5-proxy pulls fast-socks5, pure Rust: zigbuild-safe, needed for
+# Cockpit's DB-over-SSH tunnel via proxyHost/proxyPort)
+mongodb = { version = "3", features = ["socks5-proxy"], optional = true }
 futures-util = { version = "0.3", optional = true }
 
 [profile.release]
