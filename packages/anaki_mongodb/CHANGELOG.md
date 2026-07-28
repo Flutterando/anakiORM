@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6
+
+- Fix `close()` blocking ~59s for `mongodb+srv://` connections: the mongodb crate's SRV polling monitor sleeps up to 60s without observing the shutdown signal, and `Client::shutdown` waits for it. The driver now bounds shutdown at 5s — real cleanup (session end, pending drops, cancellation) still runs; only the join on the monitor's sleep is abandoned. Non-SRV connections close in microseconds as before
+
 ## 0.1.5
 
 - Enable the mongodb crate's `socks5-proxy` feature: connection URIs now accept `proxyHost`/`proxyPort`/`proxyUsername`/`proxyPassword` (MongoDB driver spec), allowing connections through a SOCKS5 proxy — e.g. an SSH dynamic forward — which is required for replica-set/SRV topologies where local port-forwards cannot follow server-announced hostnames. Pure-Rust dependency (fast-socks5); cross-compilation via cargo-zigbuild remains green on all 5 platforms

@@ -413,7 +413,17 @@ impl DatabaseConnector for MongoConnector {
 
     async fn close(&self) -> Result<(), AnakiError> {
         self.session.lock().await.take();
-        self.client.clone().shutdown().await;
+        // mongodb 3.8 bug: for mongodb+srv clients, Topology::shutdown waits
+        // on the task tracker, but SrvPollingMonitor sleeps up to 60s without
+        // selecting on the shutdown token — close() would block ~59s. The
+        // real cleanup (pending drops, sessions, token cancel) runs at the
+        // start of shutdown; bounding the wait only abandons the join on the
+        // monitor's sleep, which exits on its own once it wakes.
+        let _ = tokio::time::timeout(
+            Duration::from_secs(5),
+            self.client.clone().shutdown(),
+        )
+        .await;
         Ok(())
     }
 
