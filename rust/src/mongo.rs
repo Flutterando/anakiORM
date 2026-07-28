@@ -415,15 +415,17 @@ impl DatabaseConnector for MongoConnector {
         self.session.lock().await.take();
         // mongodb 3.8 bug: for mongodb+srv clients, Topology::shutdown waits
         // on the task tracker, but SrvPollingMonitor sleeps up to 60s without
-        // selecting on the shutdown token — close() would block ~59s. The
-        // real cleanup (pending drops, sessions, token cancel) runs at the
-        // start of shutdown; bounding the wait only abandons the join on the
-        // monitor's sleep, which exits on its own once it wakes.
-        let _ = tokio::time::timeout(
-            Duration::from_secs(5),
-            self.client.clone().shutdown(),
-        )
-        .await;
+        // selecting on the shutdown token — awaiting shutdown here would
+        // block until the monitor wakes. The shutdown future is composite
+        // (cleanup + join), so a bounded foreground wait always burns its
+        // full budget for SRV clients. Instead, detach it: the dylib's tokio
+        // runtime is a process-global static that outlives every caller, so
+        // sessions/pending drops still complete in the background within
+        // milliseconds and the monitor's task drains itself when it wakes.
+        let client = self.client.clone();
+        tokio::spawn(async move {
+            client.shutdown().await;
+        });
         Ok(())
     }
 

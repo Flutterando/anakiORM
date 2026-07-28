@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.7
+
+- `close()` now returns immediately: client shutdown is detached onto the driver's process-global runtime instead of being awaited with a 5s ceiling. Sessions and pending drops still complete in the background within milliseconds; only the SRV polling monitor's sleep drains on its own. Removes the residual 5s cost per `mongodb+srv://` close introduced by the 0.1.6 workaround
+
 ## 0.1.6
 
 - Fix `close()` blocking ~59s for `mongodb+srv://` connections: the mongodb crate's SRV polling monitor sleeps up to 60s without observing the shutdown signal, and `Client::shutdown` waits for it. The driver now bounds shutdown at 5s — real cleanup (session end, pending drops, cancellation) still runs; only the join on the monitor's sleep is abandoned. Non-SRV connections close in microseconds as before
