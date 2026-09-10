@@ -85,8 +85,14 @@ fn prepare_sql(
                 result_sql.push_str(&sql[start..i]);
             }
         } else {
-            result_sql.push(sql[i..].chars().next().unwrap());
-            i += 1;
+            // Copy the run of non-'@' bytes as a slice. `@` is ASCII, so both
+            // ends of the run are char boundaries; slicing at `i` inside a
+            // multibyte char (e.g. 'ç') used to panic here.
+            let run_start = i;
+            while i < bytes.len() && bytes[i] != b'@' {
+                i += 1;
+            }
+            result_sql.push_str(&sql[run_start..i]);
         }
     }
 
@@ -435,5 +441,41 @@ impl DatabaseConnector for MssqlConnector {
             }
             Err(_) => Ok(false),
         }
+    }
+}
+
+#[cfg(test)]
+mod prepare_sql_tests {
+    use super::*;
+
+    // Regression: prepare_sql walked the query byte by byte and sliced
+    // `sql[i..]` on every non-'@' byte, which panics when `i` lands inside a
+    // multibyte UTF-8 char ("byte index N is not a char boundary").
+    #[test]
+    fn multibyte_text_does_not_panic() {
+        let params = serde_json::Map::new();
+        for sql in [
+            "select 'coração' as x",
+            "select 'ã'",
+            "select '😀 emoji' as e",
+            "select 'ç' where 1 = @a and 'ã' = @b",
+            "東京",
+        ] {
+            let (out, _) = prepare_sql(sql, &params);
+            assert!(!out.is_empty(), "{:?} -> {:?}", sql, out);
+        }
+    }
+
+    #[test]
+    fn params_are_numbered_and_text_preserved() {
+        let mut params = serde_json::Map::new();
+        params.insert("nome".into(), serde_json::json!("João"));
+        params.insert("idade".into(), serde_json::json!(30));
+        let (out, values) = prepare_sql(
+            "select 'coração' as c, @nome as n where idade > @idade and x = @P1",
+            &params,
+        );
+        assert_eq!(out, "select 'coração' as c, @P1 as n where idade > @P2 and x = @P1");
+        assert_eq!(values, vec![serde_json::json!("João"), serde_json::json!(30)]);
     }
 }

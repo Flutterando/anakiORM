@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6
+
+- Fix native panic ("byte index N is not a char boundary") on any SQL containing non-ASCII text such as `select 'coração'`: the `@param` rewriter walked the query byte by byte and sliced inside multibyte UTF-8 characters. It now copies whole runs between `@` markers. Covered by unit tests with accented, CJK and emoji text, and validated against a live server
+
 ## 0.1.5
 
 - Fix connection failures with passwords containing URL-reserved characters (`/ ? # %` and friends): credentials were spliced raw into a connection URL, so `/ ? #` surfaced as "invalid port number" and `%` sequences were percent-decoded into a different password. Connect options are now built programmatically (never through a URL); covered by regression tests including unicode passwords

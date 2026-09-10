@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- Fix native panic ("byte index N is not a char boundary") on any SQL containing non-ASCII text such as `select 'coração'`: the `@param` rewriter walked the query byte by byte and sliced inside multibyte UTF-8 characters. It now copies whole runs between `@` markers. Covered by unit tests with accented, CJK and emoji text, and validated against a live server
+
 ## 0.1.4
 
 - Fix native symbol collision when multiple anaki drivers are loaded in the same process: the driver now binds its FFI symbols from its own library handle first, falling back to the native-assets runtime for bundled builds
