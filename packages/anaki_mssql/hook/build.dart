@@ -11,20 +11,24 @@ void main(List<String> args) async {
     final os = input.config.code.targetOS;
     final arch = input.config.code.targetArchitecture;
 
-    // Map OS to string
+    // Desktop only: the native driver ships for macOS/Linux/Windows on
+    // arm64/x64. On any other target (Android, iOS, other archs) the hook
+    // registers NO asset and returns instead of throwing, so an app that
+    // depends on this package for desktop can still build for mobile — the
+    // FFI symbols are resolved lazily at call time and must simply never be
+    // called there (e.g. mobile clients run queries through a host).
     final osStr = switch (os) {
       OS.macOS => 'darwin',
       OS.linux => 'linux',
       OS.windows => 'windows',
-      _ => throw UnsupportedError('Unsupported OS: $os'),
+      _ => null,
     };
-
-    // Map architecture to string
     final archStr = switch (arch) {
       Architecture.arm64 => 'arm64',
       Architecture.x64 => 'x64',
-      _ => throw UnsupportedError('Unsupported architecture: $arch'),
+      _ => null,
     };
+    if (osStr == null || archStr == null) return;
 
     // Map OS to file extension
     final ext = switch (os) {
