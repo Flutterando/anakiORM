@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6
+
+- Build hook no longer throws on unsupported targets (Android, iOS, other archs): it registers no native asset and returns, so a desktop app that depends on this package can also build for mobile. The FFI must simply not be called there (mobile clients run queries through a host)
+
 ## 0.1.5
 
 - Fix native panic ("byte index N is not a char boundary") on any SQL containing non-ASCII text such as `select 'coração'`: the `@param` rewriter walked the query byte by byte and sliced inside multibyte UTF-8 characters. It now copies whole runs between `@` markers. Covered by unit tests with accented, CJK and emoji text, and validated against a live server

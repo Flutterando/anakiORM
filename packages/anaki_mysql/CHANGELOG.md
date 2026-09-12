@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.8
+
+- Build hook no longer throws on unsupported targets (Android, iOS, other archs): it registers no native asset and returns, so a desktop app that depends on this package can also build for mobile. The FFI must simply not be called there (mobile clients run queries through a host)
+
 ## 0.1.7
 
 - Fix connection failures with passwords containing URL-reserved characters (`/ ? # %` and friends): credentials were spliced raw into a connection URL, so `/ ? #` surfaced as "invalid port number" and `%` sequences were percent-decoded into a different password. Connect options are now built programmatically (never through a URL); covered by regression tests including unicode passwords

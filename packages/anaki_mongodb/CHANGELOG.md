@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.8
+
+- Build hook no longer throws on unsupported targets (Android, iOS, other archs): it registers no native asset and returns, so a desktop app that depends on this package can also build for mobile. The FFI must simply not be called there (mobile clients run queries through a host)
+
 ## 0.1.7
 
 - `close()` now returns immediately: client shutdown is detached onto the driver's process-global runtime instead of being awaited with a 5s ceiling. Sessions and pending drops still complete in the background within milliseconds; only the SRV polling monitor's sleep drains on its own. Removes the residual 5s cost per `mongodb+srv://` close introduced by the 0.1.6 workaround
