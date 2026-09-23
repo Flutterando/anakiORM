@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6
+
+- Fix `@name` parameter rewriting inside SQL text: the rewriter used to replace any `@word` anywhere in the statement, so `INSERT ... VALUES ('thalya@gmail.com')` stored `thalya$1.com` and `LIKE '%@gmail.com'` matched nothing. It is now a minimal lexer that only rewrites placeholders OUTSIDE string literals (incl. `''` escapes), quoted identifiers (`"..."`, `[...]`, `` `...` ``) and comments (`--`, `/* */`). `@@name` system variables/operators are left intact
+
 ## 0.1.5
 
 - Build hook no longer throws on unsupported targets (Android, iOS, other archs): it registers no native asset and returns, so a desktop app that depends on this package can also build for mobile. The FFI must simply not be called there (mobile clients run queries through a host)

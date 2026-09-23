@@ -2,6 +2,9 @@ mod connector;
 mod error;
 mod types;
 
+#[cfg(any(feature = "sqlite", feature = "postgres", feature = "mysql", feature = "mssql"))]
+mod sql_params;
+
 #[cfg(feature = "sqlite")]
 mod sqlite;
 

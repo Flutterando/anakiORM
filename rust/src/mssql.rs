@@ -51,52 +51,9 @@ fn prepare_sql(
     sql: &str,
     params: &serde_json::Map<String, serde_json::Value>,
 ) -> (String, Vec<serde_json::Value>) {
-    let mut result_sql = String::with_capacity(sql.len());
-    let mut ordered_values = Vec::new();
-    let mut param_index = 0u32;
-
-    let bytes = sql.as_bytes();
-    let mut i = 0;
-    while i < bytes.len() {
-        if bytes[i] == b'@' {
-            let start = i;
-            i += 1;
-            let param_start = i;
-            while i < bytes.len()
-                && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_')
-            {
-                i += 1;
-            }
-            if i > param_start {
-                let param_name = &sql[param_start..i];
-                // Skip tiberius positional params like @P1, @P2
-                if param_name.starts_with('P') && param_name[1..].parse::<u32>().is_ok() {
-                    result_sql.push_str(&sql[start..i]);
-                } else {
-                    param_index += 1;
-                    result_sql.push_str(&format!("@P{}", param_index));
-                    let value = params
-                        .get(param_name)
-                        .cloned()
-                        .unwrap_or(serde_json::Value::Null);
-                    ordered_values.push(value);
-                }
-            } else {
-                result_sql.push_str(&sql[start..i]);
-            }
-        } else {
-            // Copy the run of non-'@' bytes as a slice. `@` is ASCII, so both
-            // ends of the run are char boundaries; slicing at `i` inside a
-            // multibyte char (e.g. 'ç') used to panic here.
-            let run_start = i;
-            while i < bytes.len() && bytes[i] != b'@' {
-                i += 1;
-            }
-            result_sql.push_str(&sql[run_start..i]);
-        }
-    }
-
-    (result_sql, ordered_values)
+    // Shared lexer: `@name` is only rewritten outside string literals,
+    // quoted identifiers, comments (and dollar quotes). See sql_params.rs.
+    crate::sql_params::rewrite(sql, params, crate::sql_params::Dialect::Mssql)
 }
 
 fn row_to_map(row: &tiberius::Row) -> serde_json::Map<String, serde_json::Value> {

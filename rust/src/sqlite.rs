@@ -46,44 +46,9 @@ fn prepare_sql(
     sql: &str,
     params: &serde_json::Map<String, serde_json::Value>,
 ) -> (String, Vec<serde_json::Value>) {
-    let mut result_sql = sql.to_string();
-    let mut ordered_values = Vec::new();
-
-    let mut replacements: Vec<(usize, usize, String)> = Vec::new();
-    let bytes = sql.as_bytes();
-    let mut i = 0;
-    while i < bytes.len() {
-        if bytes[i] == b'@' {
-            let start = i;
-            i += 1;
-            let param_start = i;
-            while i < bytes.len()
-                && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_')
-            {
-                i += 1;
-            }
-            if i > param_start {
-                let param_name = &sql[param_start..i];
-                replacements.push((start, i, param_name.to_string()));
-            }
-        } else {
-            i += 1;
-        }
-    }
-
-    for (start, end, _param_name) in replacements.iter().rev() {
-        result_sql.replace_range(*start..*end, "?");
-    }
-
-    for (_, _, param_name) in &replacements {
-        let value = params
-            .get(param_name.as_str())
-            .cloned()
-            .unwrap_or(serde_json::Value::Null);
-        ordered_values.push(value);
-    }
-
-    (result_sql, ordered_values)
+    // Shared lexer: `@name` is only rewritten outside string literals,
+    // quoted identifiers, comments (and dollar quotes). See sql_params.rs.
+    crate::sql_params::rewrite(sql, params, crate::sql_params::Dialect::Sqlite)
 }
 
 fn row_to_map(row: &SqliteRow) -> serde_json::Map<String, serde_json::Value> {
