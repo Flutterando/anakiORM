@@ -218,11 +218,33 @@ build_driver_for_target() {
 
   # Build the unified crate with the driver's feature flag
   if [ "$target" = "$local_target" ]; then
-    # Local target: use regular cargo build
-    cargo build --release \
+    # Local target: use regular cargo build.
+    # macOS: pin the SDK to the newest non-beta release available. Linking
+    # against a beta SDK (e.g. MacOSX27 from an Xcode beta) stamps
+    # LC_BUILD_VERSION sdk 27.x and the shipping dyld then rejects the dylib
+    # with "mis-aligned LINKEDIT string pool" (anaki_postgres 0.1.8).
+    if [ "$os_str" = "darwin" ] && [ -z "${SDKROOT:-}" ]; then
+      for _sdk in /Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk \
+                  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.sdk; do
+        if [ -d "$_sdk" ]; then
+          export SDKROOT="$_sdk"
+          print_info "Using SDKROOT=$_sdk"
+          break
+        fi
+      done
+      # cargo does not track SDKROOT: touch a source to force a relink
+      touch "$CRATE_DIR/src/lib.rs"
+    fi
+    if ! cargo build --release \
       --manifest-path "$CRATE_DIR/Cargo.toml" \
       --target "$target" \
-      --features "$driver" 2>&1 | tail -5
+      --features "$driver" 2>&1 | tail -15; then :; fi
+    # `| tail` hides cargo's exit status: verify the artifact is fresher than
+    # the sources, otherwise a stale dylib of ANOTHER driver gets shipped.
+    if [ -n "$(find "$CRATE_DIR/src" -newer "$CRATE_DIR/target/$target/release/libanaki_native.$ext" 2>/dev/null)" ]; then
+      print_error "cargo build failed for $driver ($target): artifact older than sources"
+      return 1
+    fi
   else
     # Cross-compilation: use cargo-zigbuild
     zigbuild_cmd="$HOME/.cargo/bin/cargo-zigbuild"

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.10
+
+- Fix macOS arm64 dylib rejected by dyld ("mis-aligned LINKEDIT string pool", dlopen failed so every query died): 0.1.9 was linked against the Xcode 27 beta SDK. Relinked against the macOS 26 SDK; the build script now pins SDKROOT to the newest non-beta SDK and fails instead of shipping a stale artifact when cargo errors. No Dart/Rust changes since 0.1.9
+
 ## 0.1.9
 
 - Fix `@name` parameter rewriting inside SQL text: the rewriter used to replace any `@word` anywhere in the statement, so `INSERT ... VALUES ('thalya@gmail.com')` stored `thalya$1.com` and `LIKE '%@gmail.com'` matched nothing. It is now a minimal lexer that only rewrites placeholders OUTSIDE string literals (incl. `''` escapes and backslash escapes), quoted identifiers (`"..."`, `` `...` ``) and comments (`--`, `/* */`, `#`). `@@name` system variables/operators are left intact
