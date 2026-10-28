@@ -1,0 +1,59 @@
+name: macOS dylib install names
+
+on:
+  push:
+    branches: [feature/macos-native-headerpad]
+  pull_request:
+    paths:
+      - 'rust/**'
+      - '.github/workflows/macos-install-names.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-install-names:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            arch: arm64
+          - os: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Toolchain and native architecture
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "${{ matrix.arch }}"
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+          sdk="$(xcrun --sdk macosx --show-sdk-path)"
+          case "$sdk" in *[Bb]eta*) echo 'A non-beta SDK is required'; exit 1;; esac
+          echo "SDKROOT=$sdk" >> "$GITHUB_ENV"
+          sw_vers
+          xcodebuild -version
+          rustc --version
+      - name: Build MySQL cdylib with target build script
+        run: cargo build --locked --release --manifest-path rust/Cargo.toml --features mysql
+      - name: Rewrite long install name and load rebuilt dylib
+        shell: bash
+        run: |
+          set -euo pipefail
+          fixture="$RUNNER_TEMP/install-name-regression/$(python3 -c 'print("long-native-asset-path-" * 8)')"
+          mkdir -p "$fixture"
+          library="$fixture/libanaki_mysql.dylib"
+          cp rust/target/release/libanaki_native.dylib "$library"
+          install_name_tool -id "$library" "$library"
+          codesign --force --sign - "$library"
+          otool -D "$library"
+          file "$library"
+          python3 -c 'import ctypes,sys; ctypes.CDLL(sys.argv[1]); print("rebuilt dylib loaded after install-name rewrite")' "$library"
+          dsymutil "$library" -o "$RUNNER_TEMP/install-name-regression.dSYM"
