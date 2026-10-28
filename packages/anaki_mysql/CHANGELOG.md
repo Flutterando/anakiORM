@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.11
+
+- Fix macOS bundling failure (`install_name_tool: larger updated load commands do not fit`): Dart native-assets rewrites the dylib install name to a long temporary path and the previous binaries had only 8 bytes of header padding. Darwin dylibs are now linked with `-headerpad_max_install_names` (#8). All native binaries rebuilt against the macOS 26 SDK
+
 ## 0.1.10
 
 - Fix macOS arm64 dylib rejected by dyld ("mis-aligned LINKEDIT string pool", dlopen failed so every query died): 0.1.9 was linked against the Xcode 27 beta SDK. Relinked against the macOS 26 SDK; the build script now pins SDKROOT to the newest non-beta SDK and fails instead of shipping a stale artifact when cargo errors. No Dart/Rust changes since 0.1.9

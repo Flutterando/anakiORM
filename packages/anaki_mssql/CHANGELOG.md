@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.8
+
+- Fix macOS bundling failure (`install_name_tool: larger updated load commands do not fit`): Dart native-assets rewrites the dylib install name to a long temporary path and the previous binaries had only 8 bytes of header padding. Darwin dylibs are now linked with `-headerpad_max_install_names` (#8). All native binaries rebuilt against the macOS 26 SDK
+
 ## 0.1.7
 
 - Fix `@name` parameter rewriting inside SQL text: the rewriter used to replace any `@word` anywhere in the statement, so `INSERT ... VALUES ('thalya@gmail.com')` stored `thalya$1.com` and `LIKE '%@gmail.com'` matched nothing. It is now a minimal lexer that only rewrites placeholders OUTSIDE string literals (incl. `''` escapes and `N'...'`), quoted identifiers (`"..."`, `[...]`) and comments (`--`, `/* */`). `@@name` system variables/operators are left intact
